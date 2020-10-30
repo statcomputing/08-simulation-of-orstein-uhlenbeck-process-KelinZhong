@@ -1,0 +1,259 @@
+---
+title: "Homework 8"
+author: "Kelin Zhong"
+date: "2020/10/29"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1
+
+notice that
+\[
+d(e^{\alpha t}r(t)) = e^{\alpha t}dr(t) + r(t)d(e^{\alpha t}) = e^{\alpha t}dr(t) + \alpha e^{\alpha t}r(t)dt
+\]
+and
+\[
+\begin{aligned}
+dr(t) =& \alpha(b-r(t))dt + \sigma dW(t) \\
+e^{\alpha t}dr(t) =& e^{\alpha t}b\alpha dt - e^{\alpha t}\alpha r(t)dt +e^{\alpha t}\sigma dW(t) 
+\end{aligned}
+\]
+then we obtain 
+\[
+d(e^{\alpha t}r(t))=b\alpha e^{\alpha t}dt + e^{\alpha t}\sigma dW(t) = b(1-e^{\alpha t}) + e^{\alpha t}\sigma dW(t)
+\]
+Therefore, we may conclude that 
+\[
+\begin{aligned}
+e^{\alpha (t+\Delta)}r(t+\Delta) - e^{\alpha t}r(t) =& b(e^{\alpha (t+\Delta)}-e^{\alpha t}) + \sigma\int_{t}^{t+\Delta}e^{\alpha s}dW(s) \\
+r(t + \Delta) =& e^{-\alpha\Delta}r(t) + b(1-e^{-\alpha\Delta}) + \sigma\int_{t}^{t+\Delta}e^{\alpha[s-(t+\Delta)]}dW(s)
+\end{aligned}
+\]
+Since for $\forall 0\le s< t$, we have $W(t)-W(s)\sim N(0,t-s)$, we have $Z\sim N(0,1)$ and $W(t+\Delta)-W(t)=\sqrt{\Delta}Z\sim N(0,\Delta)$. Hence
+\[
+\begin{aligned}
+r(t + \Delta) =& e^{-\alpha\Delta}r(t) + b(1-e^{-\alpha\Delta}) + \sigma\int_{t}^{t+\Delta}e^{\alpha[s-(t+\Delta)]}dW(s)\\
+r(t+\Delta) =& e^{-\alpha\Delta}r(t) + b(1-e^{-\alpha\Delta}) + \frac{\sigma}{\sqrt{2\alpha}}\sqrt{1-e^{-2\alpha\Delta}}Z
+\end{aligned}
+\]
+
+
+
+$\forall 0\le s<t$, we have $W(t)-W(s)\sim N(0,t-s)$. Hence, $W(t+\Delta)-W(t)\sim N(0,\Delta)$.
+
+
+
+
+## 2
+```{R}
+rtfun <- function(alpha, sigma, b, init, T, delta){
+  step <- delta
+  r0 <- init
+  t <- 0
+  r_path <- numeric()
+  step_path <- numeric()
+  j <- 1
+  while(t <= T){
+    j <- j + 1
+    t <- t + step
+    z <- rnorm(1,0,1)
+    rtv <- exp(-alpha*delta)*r0 + b*(1-exp(-alpha*delta)) + 
+      (sigma/sqrt(2*alpha))*sqrt(1-exp(-2*alpha*delta))*z
+    
+    r_path[j] <- rtv
+    step_path[j] <- t
+    
+    r0 <- rtv
+  }
+  return(list("Y" = r_path, "X" = step_path))
+}
+
+#alpha = 0.1, b = -5
+f1 <- rtfun(0.1,0.1,-5,1,500,1/500)
+f2 <- rtfun(0.1,0.2,-5,1,500,1/500)
+f3 <- rtfun(0.1,0.5,-5,1,500,1/500)
+
+#alpha = 1, b = -5
+f4 <- rtfun(1,0.1,-5,1,500,1/500)
+f5 <- rtfun(1,0.2,-5,1,500,1/500)
+f6 <- rtfun(1.1,0.5,-5,1,500,1/500)
+
+#alpha = 5, b = -5
+f7 <- rtfun(5,0.1,-5,1,500,1/500)
+f8 <- rtfun(5,0.2,-5,1,500,1/500)
+f9 <- rtfun(5,0.5,-5,1,500,1/500)
+
+#alpha = 0.1, b = 5
+f10 <- rtfun(0.1,0.1,5,1,500,1/500)
+f11 <- rtfun(0.1,0.2,5,1,500,1/500)
+f12 <- rtfun(0.1,0.5,5,1,500,1/500)
+
+#alpha = 1, b = 5
+f13 <- rtfun(1,0.1,5,1,500,1/500)
+f14 <- rtfun(1,0.2,5,1,500,1/500)
+f15 <- rtfun(1,0.5,5,1,500,1/500)
+
+#alpha = 5, b = 5
+f16 <- rtfun(5,0.1,5,1,500,1/500)
+f17 <- rtfun(5,0.2,5,1,500,1/500)
+f18 <- rtfun(5,0.5,5,1,500,1/500)
+
+x0 <- f1$X
+y1 <- f1$Y
+y2 <- f2$Y
+y3 <- f3$Y
+y4 <- f4$Y
+y5 <- f5$Y
+y6 <- f6$Y
+y7 <- f7$Y
+y8 <- f8$Y
+y9 <- f9$Y
+y10 <- f10$Y
+y11 <- f11$Y
+y12 <- f12$Y
+y13 <- f13$Y
+y14 <- f14$Y
+y15 <- f15$Y
+y16 <- f16$Y
+y17 <- f17$Y
+y18 <- f18$Y
+
+library(ggplot2)
+library(dbplyr)
+
+df1 <- data.frame(x0,y1,y2,y3,y4,y5,y6,y7,y8,y9)
+df2 <- data.frame(x0,y10,y11,y12,y13,y14,y15,y16,y17,y18)
+
+#b = -5
+ggplot(df1, aes(x = x0)) +
+  geom_line(aes(y = y1, color = "alpha = 0.1, sigma = 0.1, b = -5")) +
+  geom_line(aes(y = y2, color = "alpha = 0.1, sigma = 0.2, b = -5")) +
+  geom_line(aes(y = y3, color = "alpha = 0.1, sigma = 0.5, b = -5")) +
+  geom_line(aes(y = y4, color = "alpha = 1, sigma = 0.1, b = -5")) +
+  geom_line(aes(y = y5, color = "alpha = 1, sigma = 0.2, b = -5")) +
+  geom_line(aes(y = y6, color = "alpha = 1, sigma = 0.5, b = -5")) +
+  geom_line(aes(y = y7, color = "alpha = 5, sigma = 0.1, b = -5")) +
+  geom_line(aes(y = y8, color = "alpha = 5, sigma = 0.2, b = -5")) +
+  geom_line(aes(y = y9, color = "alpha = 5, sigma = 0.5, b = -5")) +
+  labs(title = "Sample path for r(t) under different parameters")
+```
+
+
+```{R}
+#b = 5
+ggplot(df2, aes(x = x0)) +
+  geom_line(aes(y = y10, color = "alpha = 0.1, sigma = 0.1, b = 5")) +
+  geom_line(aes(y = y11, color = "alpha = 0.1, sigma = 0.2, b = 5")) +
+  geom_line(aes(y = y12, color = "alpha = 0.1, sigma = 0.5, b = 5")) +
+  geom_line(aes(y = y13, color = "alpha = 1, sigma = 0.1, b = 5")) +
+  geom_line(aes(y = y14, color = "alpha = 1, sigma = 0.2, b = 5")) +
+  geom_line(aes(y = y15, color = "alpha = 1, sigma = 0.5, b = 5")) +
+  geom_line(aes(y = y16, color = "alpha = 5, sigma = 0.1, b = 5")) +
+  geom_line(aes(y = y17, color = "alpha = 5, sigma = 0.2, b = 5")) +
+  geom_line(aes(y = y18, color = "alpha = 5, sigma = 0.5, b = 5")) +
+  labs(title = "Sample path for r(t) under different parameters")
+
+```
+When $\alpha$ increase, the value of r(t) converge faster. Further, when $\sigma$ increases, the path of r(t) becomes more fluctuated.
+
+
+
+
+
+## 3
+According to the equation
+\[
+r(t+\Delta) = e^{-\alpha\Delta}r(t)+b(1-e^{-\alpha\Delta})+\frac{\sigma}{\sqrt{2\alpha}}\sqrt{1-e^{-2\alpha\Delta}}Z
+\]
+and initial value $r(0)=1$, we may obtain 
+\[
+\begin{aligned}
+r(1) =& r(0 + 1) \\
+=& e^{-\alpha}r(0)+b(1-e^{-\alpha})+\frac{\sigma}{\sqrt{2\alpha}}\sqrt{1-e^{-2\alpha}}Z \\
+=& e^{-\alpha}+b(1-e^{-\alpha})+\frac{\sigma}{\sqrt{2\alpha}}\sqrt{1-e^{-2\alpha}}Z
+\end{aligned}
+\]
+Obviously, $r(1)$ follows normal distribution.
+\[
+E[r(1)] = e^{-\alpha}+b(1-e^{-\alpha})
+\]
+\[
+Var[r(1)] = (\frac{\sigma}{\sqrt{2\alpha}})^{2} = \frac{\sigma^{2}}{2\alpha}
+\]
+
+
+
+```{R}
+rtfun_eu <- function(alpha, sigma, b, init, to, n, delta){
+  step <- delta
+  r0 <- init
+  t <- 0
+  r_path <- numeric()
+  j <- 1
+  while(t <= to){
+    t <- t + step
+    z <- rnorm(1,0,1)
+    rtv <- exp(-alpha*delta)*r0 + b*(1-exp(-alpha*delta)) + 
+      (sigma/sqrt(2*alpha))*sqrt(1-exp(-2*alpha*delta))*z
+    r0 <- rtv
+  }
+  r_path <- rnorm(n, mean = r0 + alpha*(b - r0)*delta, sd = sigma*delta)
+  return(r_path)
+}
+
+
+
+```
+Suppose that $\alpha = 1$, $\sigma = 0.5$, $b = 5$. Further we know that $r(0) = 1$.
+
+
+```{R}
+a0 <- 1
+sig <- 0.5
+b0 <- 5
+N <- 1000
+r1 <- exp(-a0)+b0*(1-exp(-a0))
+
+g1 <- rtfun_eu(a0,sig,b0,0,1,N,delta = 1)
+g2 <- rtfun_eu(a0,sig,b0,0,1,N,delta = 0.5)
+g3 <- rtfun_eu(a0,sig,b0,0,1,N,delta = 0.1)
+g4 <- rtfun_eu(a0,sig,b0,0,1,N,delta = 0.01)
+
+
+
+rt1true <- function(x){
+  dnorm(x, mean = r1, sd = 1)
+}
+
+gx0 <- density(g1,n=1000)$x
+gy1 <- density(g1,n=1000)$y
+gy2 <- density(g2,n=1000)$y
+gy3 <- density(g3,n=1000)$y
+gy4 <- density(g4,n=1000)$y
+
+df3 <- data.frame(gx0,gy1,gy2,gy3,gy4)
+
+
+ggplot(df3, aes(x = gx0)) +
+  geom_line(aes(y = gy1, color = "delta = 1")) +
+  geom_line(aes(y = gy2, color = "delta = 0.5")) +
+  geom_line(aes(y = gy3, color = "delta = 0.1")) +
+  geom_line(aes(y = gy4, color = "delta = 0.01")) +
+  stat_function(fun = rt1true, n = 1000, aes(color = "True density")) +
+  labs(title = "Density for r(1) under different delta")
+```
+
+
+
+
+
+
+
+
+
+
+
